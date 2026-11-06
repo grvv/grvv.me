@@ -91,9 +91,9 @@ Minimal Next.js site: home, projects, experience, resume PDF, contact. Deploy to
 - [x] Hosting decision 2026-11-07: **all-Cloudflare, static export** (Option C). Vercel dropped — Hobby is non-commercial-only and adds a second vendor; OpenNext-on-Workers skipped as unproven with Next 16 + 10 ms CPU limit. Revisit SSR/ISR only if a feature truly needs it; a VPS (Hetzner/Contabo) is a possible Phase 5 self-host showcase, not needed now.
 - [x] `output: 'export'` in `next.config.ts` (Cache Components removed — incompatible with the `force-static` metadata routes need); `wrangler.jsonc` assets-only Worker `grvv-web` serving `out/`; `pnpm run deploy` / `pnpm run preview` scripts (in apps/web); verified locally with `wrangler dev` (all routes 200, unknown path 404)
 - [x] `wrangler login` (one-time, opens browser; Cloudflare account email = `dev@grvv.me` alias) then `pnpm --filter web run deploy` → live at `grvv-web.<account>.workers.dev`
-- [x] Cloudflare → Workers & Pages → `grvv-web` → Settings → Domains & Routes → add custom domains `grvv.me` and `www.grvv.me` (Cloudflare creates the DNS records + cert)
+- [x] Custom domains `grvv.me` + `www.grvv.me` via `routes` in `wrangler.jsonc` (`custom_domain: true`); wrangler creates DNS + cert on deploy — live 2026-11-07
 - [ ] Cloudflare → Rules → Redirect Rules → template "Redirect from WWW to root" (free; `_redirects` in Workers Static Assets allows relative targets only)
-- [ ] Cloudflare SSL/TLS: Full (strict); Always Use HTTPS
+- [ ] Cloudflare → SSL/TLS → Edge Certificates → **Always Use HTTPS** on (plain `http://` currently serves 200). SSL mode is irrelevant for Workers custom domains (no origin).
 - [ ] Deploy on push: Workers & Pages → `grvv-web` → Settings → Build → connect GitHub `grvv/grvv.me`, root `apps/web`, build `pnpm build`, deploy `pnpm exec wrangler deploy` (free; replaces manual `pnpm run deploy`)
 - [ ] Cloudflare Web Analytics snippet in `app/layout.tsx`
 - [ ] OG image (`app/opengraph-image.tsx`) and favicon
