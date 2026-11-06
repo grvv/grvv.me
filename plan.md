@@ -41,8 +41,8 @@ grvv/                      (pnpm + Turborepo monorepo)
 
 | Layer | Tech | Hosting | Cost |
 |---|---|---|---|
-| Web | Next.js, SSG/ISR for blog | Vercel Hobby | Free |
-| API | Hono + Drizzle | Cloudflare Workers (or Railway/Fly) | $0–5/mo |
+| Web | Next.js static export (`output: 'export'`) | Cloudflare Workers Static Assets | Free, unlimited |
+| API | Hono + Drizzle | Cloudflare Workers | Free (100k req/day) |
 | Database | Postgres + pgvector | Neon | Free tier |
 | Auth | Better Auth (passkeys + GitHub, single admin) | — | Free |
 | Media | Cloudflare R2 | Cloudflare | Free tier |
@@ -81,20 +81,25 @@ grvv/                      (pnpm + Turborepo monorepo)
 - [x] Test send/receive; score 10/10 on mail-tester.com
 - [x] Re-enable DNSSEC via Cloudflare (DS record at GoDaddy) — Success 2026-11-07
 
-### Phase 1 — Portfolio live (week 1) *(current)*
+### Phase 1 — Portfolio live (week 1) *(current — grvv.me live 2026-11-07)*
 Minimal Next.js site: home, projects, experience, resume PDF, contact. Deploy to `grvv.me`, redirect `www` → apex.
 - [x] Monorepo scaffold: pnpm + Turborepo, `apps/web` (Next.js 16), `packages/shared` (Zod schemas) — 2026-11-07
 - [x] Pages: `/`, `/projects`, `/experience`, 404, `robots.txt`, `sitemap.xml`; all static; email obfuscated client-side
 - [ ] Fill `apps/web/content/site.ts` with real bio, projects, experience, links
 - [ ] Drop resume at `apps/web/public/resume.pdf`
-- [ ] First commit; create GitHub repo; push
-- [ ] Vercel: import repo, root = `apps/web`, framework Next.js (Vercel detects Turborepo) — free Hobby
-- [ ] Cloudflare DNS: `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com` (DNS only / grey cloud for Vercel's cert), add both domains in Vercel, `www` → apex redirect
+- [x] First commit; GitHub repo `grvv/grvv.me`; pushed 2026-11-07
+- [x] Hosting decision 2026-11-07: **all-Cloudflare, static export** (Option C). Vercel dropped — Hobby is non-commercial-only and adds a second vendor; OpenNext-on-Workers skipped as unproven with Next 16 + 10 ms CPU limit. Revisit SSR/ISR only if a feature truly needs it; a VPS (Hetzner/Contabo) is a possible Phase 5 self-host showcase, not needed now.
+- [x] `output: 'export'` in `next.config.ts` (Cache Components removed — incompatible with the `force-static` metadata routes need); `wrangler.jsonc` assets-only Worker `grvv-web` serving `out/`; `pnpm run deploy` / `pnpm run preview` scripts (in apps/web); verified locally with `wrangler dev` (all routes 200, unknown path 404)
+- [x] `wrangler login` (one-time, opens browser; Cloudflare account email = `dev@grvv.me` alias) then `pnpm --filter web run deploy` → live at `grvv-web.<account>.workers.dev`
+- [x] Cloudflare → Workers & Pages → `grvv-web` → Settings → Domains & Routes → add custom domains `grvv.me` and `www.grvv.me` (Cloudflare creates the DNS records + cert)
+- [ ] Cloudflare → Rules → Redirect Rules → template "Redirect from WWW to root" (free; `_redirects` in Workers Static Assets allows relative targets only)
 - [ ] Cloudflare SSL/TLS: Full (strict); Always Use HTTPS
+- [ ] Deploy on push: Workers & Pages → `grvv-web` → Settings → Build → connect GitHub `grvv/grvv.me`, root `apps/web`, build `pnpm build`, deploy `pnpm exec wrangler deploy` (free; replaces manual `pnpm run deploy`)
 - [ ] Cloudflare Web Analytics snippet in `app/layout.tsx`
 - [ ] OG image (`app/opengraph-image.tsx`) and favicon
 
-Dev: `pnpm dev` (all), `pnpm build`, `pnpm typecheck`, `pnpm lint`. Node via fnm (`eval "$(fnm env)"`), pnpm installed globally.
+Dev: `pnpm dev` (all), `pnpm build`, `pnpm typecheck`, `pnpm lint`; `pnpm --filter web preview` serves the export via wrangler at :8787.
+Static-export constraints: no ISR, server actions, `next/image` default loader, or request-time route handlers; blog publish (Phase 2) = API writes to DB → triggers a rebuild (Workers Builds deploy hook), ~1–2 min to live. Admin is a client-side app talking to the Hono API. Node via fnm (`eval "$(fnm env)"`), pnpm installed globally.
 
 ### Phase 2 — Backend + blog (weeks 2–3)
 Hono API, DB schema, auth, posts CRUD, R2 image uploads, Tiptap admin, public blog with RSS, sitemap, OG images.
@@ -237,7 +242,7 @@ Add a filter entry to the XML whenever you add an alias.
 | Item | Cost |
 |---|---|
 | Domain (GoDaddy, prepaid 3 yrs) | Paid |
-| Cloudflare, Vercel, Neon | $0 |
+| Cloudflare (DNS, Workers, R2, Analytics), Neon | $0 |
 | Google Workspace Business Starter | ₹99/mo offer (~₹1,200/yr) — check renewal price |
 | AI API usage | ~$0–5/mo |
 | Apple/Google dev accounts (only to publish mobile app to stores) | $99/yr / $25 once — optional, Expo Go/dev builds work without |

@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Assets-only Worker: no script, Cloudflare serves ./out directly.
+  // Static asset requests are free and unlimited on the Workers Free plan.
+  "name": "grvv-web",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./out",
+    // Serve /projects as /projects.html and 404.html for unknown paths.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
